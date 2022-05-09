@@ -1,0 +1,34 @@
+作业：（编程题）作为一个DAO，我们不应该使用AccessControl和Role来管理权限，而是使用链上治理或投票机制来决定什么时候DAO可以进入“撤销中”状态或重置状态。请以此命题来编写DelegationDAO升级版，您可以实现一个简单的链上投票功能或使用现有的投票或治理库。
+
+设计思路：设定一个撤销投票计数器，参与撤销投票的人数达到质押总人数的2/3，任何人都可以发起撤销了。用户点击撤销按钮，就发起一次撤销投票，只能投票一次。
+
+合约质押状态阈值修改为0.05DEV，每次质押0.01DEV，一共5个人就够了。
+账户1 0xAb29311ebD97c473ADB8BCD7BB78A4C1184F5cB4
+账户2 0x8C30e01e8322A16b5E94ad635aFD7aBB5bb0Ca8b
+账户3 0xf24FF3a9CF04c71Dbc94D0b566f7A27B94566cac
+账户4 0x3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0
+账户5 0xa8b0Bceddd4FE28bFde9Ca441b1060653E249C13
+
+在Remix中设计的操作步骤：
+（1）创建合约： 指定admin 为账户1
+（2）查看 质押状态currentState=0，表示COLLECTING
+（3）管理员账户调用grant_member(账户2)，添加账户2为成员。
+                                  grant_member(账户3)，添加账户3为成员。
+                                  grant_member(账户4)，添加账户4为成员。
+                                  grant_member(账户5)，添加账户5为成员。
+（4）账户1调用add_stake()，质押0.01DEV
+         账户2调用add_stake()，质押0.01DEV
+         账户3调用add_stake()，质押0.01DEV
+         账户4调用add_stake()，质押0.01DEV
+         账户5调用add_stake()，质押0.01DEV。
+                  账户5质押成功后合约状态自动切换：COLLECTING-->STAKING
+（5）查看质押总人数 stakeHeadCount =5
+         质押状态currentState=1，表示STAKING
+（6）账户1、2、3、4调用userRequestRevoke(),  查看revokeRequestHeadCount=4
+（7）账户4调用schedule_revoke2()，这时撤销申请票数4超过质押总人数的2/3，发起撤销成功。 
+
+【遇到问题】：  合约内容状态无法切换，无法解决， 操作进行不下去。
+按照正常操作质押金额达到阈值就会自动切换转状态COLLECTING-->STAKING。
+我设定阈值为0.05ETH，每个人质押0.01ETH正常，第5个人质押0.01就失败，提示错误信息：
+Dispatched call failed with error: <wasm:stripped>。
+这样就无法切换到Staking状态，后续就无法发起撤销操作了。
