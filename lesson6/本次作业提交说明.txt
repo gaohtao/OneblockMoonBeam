@@ -10,7 +10,9 @@
 账户5 0xa8b0Bceddd4FE28bFde9Ca441b1060653E249C13
 
 在Remix中设计的操作步骤：
-（1）创建合约： 指定admin 为账户1
+（1）部署DelegationDAO合约： 
+         参数1  选举人地址，0x9658121Ae8e9Afb2a0134D8C3B5121aF915B10B0
+         参数2  admin 为账户1
 （2）查看 质押状态currentState=0，表示COLLECTING
 （3）管理员账户调用grant_member(账户2)，添加账户2为成员。
                                   grant_member(账户3)，添加账户3为成员。
@@ -25,10 +27,14 @@
 （5）查看质押总人数 stakeHeadCount =5
          质押状态currentState=1，表示STAKING
 （6）账户1、2、3、4调用userRequestRevoke(),  查看revokeRequestHeadCount=4
-（7）账户4调用schedule_revoke2()，这时撤销申请票数4超过质押总人数的2/3，发起撤销成功。 
+（7）账户4调用schedule_revoke2()，这时撤销申请票数4超过质押总人数的2/3，发起撤销成功。 合约状态自动切换：STAKING-->REVOKING
+（8）等待4个小时，发起withdraw(), 提取质押款。成功。
+        查看状态切换为 REVOKING->REVOKED
 
-【遇到问题】：  合约内容状态无法切换，无法解决， 操作进行不下去。
-按照正常操作质押金额达到阈值就会自动切换转状态COLLECTING-->STAKING。
-我设定阈值为0.05ETH，每个人质押0.01ETH正常，第5个人质押0.01就失败，提示错误信息：
-Dispatched call failed with error: <wasm:stripped>。
-这样就无法切换到Staking状态，后续就无法发起撤销操作了。
+
+【遇到问题1】：合约中的质押阈值必须是5ETH，原因是staking接口内部限制了质押总额最小值是5ETH，低于该值引起接口函数调用失败，DelegationDAO合约状态不能切换到STAKING。
+必须申请到足够的测试币DEV，不断地质押进去达到5个条件。
+【遇到问题2】合约状态切换到REVOKING之后，调用withdraw失败，无法撤销质押。
+必须等待4个小时，之后在调用withdraw成功返回质押代币。推测是staking接口内部要等待4小时以上才能返回正确。
+
+

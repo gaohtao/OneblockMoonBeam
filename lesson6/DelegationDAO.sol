@@ -35,7 +35,7 @@ contract DelegationDAO is AccessControl {
     ParachainStaking public staking;
     
     // Minimum Delegation Amount
-    uint256 public constant minDelegationStk = 50000000000000000;  //0.05ether
+    uint256 public constant minDelegationStk = 5 ether；
     
     // Moonbeam Staking Precompile address
     address public constant stakingPrecompileAddress = 0x0000000000000000000000000000000000000800;
